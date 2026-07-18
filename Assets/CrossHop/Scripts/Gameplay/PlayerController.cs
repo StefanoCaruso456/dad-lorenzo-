@@ -10,8 +10,12 @@ namespace CrossHop.Gameplay
 
     /// <summary>
     /// Grid-snapped hopper. Consumes hop requests, animates a discrete arc between
-    /// cells, and each frame evaluates the current cell for death (traffic, water)
-    /// and log-riding. Column is clamped to the playfield; forward advances score.
+    /// cells, and each frame evaluates the current cell for death (traffic, water) and
+    /// log-riding. Column is clamped to the playfield; forward advances score.
+    ///
+    /// Two ability hooks live here but the controller stays ignorant of abilities:
+    /// a <see cref="HopProfile"/> scales the hop feel, and a <see cref="DeathGuard"/>
+    /// delegate can absorb an otherwise-fatal hit (granting a brief invulnerability).
     /// </summary>
     [RequireComponent(typeof(Transform))]
     public sealed class PlayerController : MonoBehaviour
@@ -20,19 +24,31 @@ namespace CrossHop.Gameplay
         [SerializeField] private LaneGenerator laneGenerator;
         [SerializeField] private InputReader input;
 
+        [Tooltip("Invulnerability granted after a death is absorbed, to hop clear.")]
+        [SerializeField] private float absorbInvulnerability = 0.8f;
+
         public event Action<int> OnRowAdvanced;         // new furthest row
         public event Action<DeathCause> OnDied;
+
+        /// <summary>
+        /// Optional gate consulted before a fatal hit lands. Return true to absorb it.
+        /// Set per run by the game manager from the active ability; cleared on death.
+        /// </summary>
+        public Func<DeathCause, bool> DeathGuard { get; set; }
 
         public int Column { get; private set; }
         public int Row { get; private set; }
         public int FurthestRow { get; private set; }
         public bool IsAlive { get; private set; }
+        public bool IsInvulnerable => _invulnTimer > 0f;
 
         private Vector3 _hopStart;
         private Vector3 _hopEnd;
         private float _hopT;
         private bool _hopping;
         private MovingObstacle _ridingLog;   // non-null while carried across water
+        private HopProfile _hopProfile = HopProfile.Default;
+        private float _invulnTimer;
 
         private void OnEnable()
         {
@@ -44,6 +60,9 @@ namespace CrossHop.Gameplay
             if (input != null) input.OnHop -= HandleHop;
         }
 
+        /// <summary>Apply an ability's hop feel for this run. Reset each run.</summary>
+        public void SetHopProfile(HopProfile profile) => _hopProfile = profile;
+
         /// <summary>Place the player at the origin cell and begin a run.</summary>
         public void ResetToStart()
         {
@@ -53,6 +72,8 @@ namespace CrossHop.Gameplay
             _hopping = false;
             _hopT = 0f;
             _ridingLog = null;
+            _invulnTimer = 0f;
+            _hopProfile = HopProfile.Default;
             IsAlive = true;
             transform.position = grid.CellToWorld(Column, Row);
         }
@@ -60,6 +81,7 @@ namespace CrossHop.Gameplay
         private void Update()
         {
             if (!IsAlive) return;
+            if (_invulnTimer > 0f) _invulnTimer -= Time.deltaTime;
 
             if (_hopping) AnimateHop();
             else if (_ridingLog != null) DriftWithLog();
@@ -109,11 +131,12 @@ namespace CrossHop.Gameplay
 
         private void AnimateHop()
         {
-            _hopT += Time.deltaTime / grid.hopDuration;
+            float duration = grid.hopDuration * _hopProfile.DurationMultiplier;
+            _hopT += Time.deltaTime / Mathf.Max(0.0001f, duration);
             float t = Mathf.Clamp01(_hopT);
 
             Vector3 pos = Vector3.Lerp(_hopStart, _hopEnd, t);
-            pos.y = Mathf.Sin(t * Mathf.PI) * grid.hopHeight; // arc
+            pos.y = Mathf.Sin(t * Mathf.PI) * grid.hopHeight * _hopProfile.HeightMultiplier; // arc
             transform.position = pos;
 
             if (t >= 1f)
@@ -173,9 +196,18 @@ namespace CrossHop.Gameplay
 
         private void Die(DeathCause cause)
         {
-            if (!IsAlive) return;
+            if (!IsAlive || _invulnTimer > 0f) return;
+
+            // Let an ability absorb the hit; survive with a brief window to escape.
+            if (DeathGuard != null && DeathGuard(cause))
+            {
+                _invulnTimer = absorbInvulnerability;
+                return;
+            }
+
             IsAlive = false;
             _ridingLog = null;
+            DeathGuard = null;
             OnDied?.Invoke(cause);
         }
     }

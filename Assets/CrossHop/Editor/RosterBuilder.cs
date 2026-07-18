@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using CrossHop.Characters;
+using CrossHop.Characters.Abilities;
 using CrossHop.Gameplay;
 using UnityEditor;
 using UnityEngine;
@@ -51,14 +52,14 @@ namespace CrossHop.EditorTools
             new("blocko", "Blocko", "construction", "Construction Site", "ConstructionSite", Rarity.Common, "#e0863c"),
             // ---- New arrivals ----
             new("finn",   "Finn",   "coralcoast",   "Coral Coast",       "CoralCoast",       Rarity.Rare,      "#29c2d6"),
-            new("eileen", "Eileen", "moon",         "The Moon",          "TheMoon",          Rarity.Legendary, "#9b8cff", false, "Low-G Hop"),
+            new("eileen", "Eileen", "moon",         "The Moon",          "TheMoon",          Rarity.Legendary, "#9b8cff", false, "LowGravity"),
             new("blaze",  "Blaze",  "emberridge",   "Ember Ridge",       "EmberRidge",       Rarity.Epic,      "#ff6a3d", false, "Fireproof"),
             new("frost",  "Frost",  "glacierpass",  "Glacier Pass",      "GlacierPass",      Rarity.Rare,      "#5bb8f5"),
             new("sandy",  "Sandy",  "dunesea",      "Dune Sea",          "DuneSea",          Rarity.Common,    "#e8a53a"),
             new("rex",    "Rex",    "tarpit",       "Tar-Pit Jungle",    "TarPitJungle",     Rarity.Epic,      "#7bb74a"),
             new("wisp",   "Wisp",   "hollowhill",   "Hollow Hill",       "HollowHill",       Rarity.Epic,      "#7ce0b8"),
             new("sprout", "Sprout", "rainforest",   "Rainforest Pond",   "RainforestPond",   Rarity.Common,    "#7bc23f"),
-            new("pixel",  "Pixel",  "neongrid",     "Neon Grid",         "NeonGrid",         Rarity.Legendary, "#ff4fd8", true,  "Coin Magnet"),
+            new("pixel",  "Pixel",  "neongrid",     "Neon Grid",         "NeonGrid",         Rarity.Legendary, "#ff4fd8", true,  "CoinMagnet"),
             new("coco",   "Coco",   "temple",       "Temple Ruins",      "TempleRuins",      Rarity.Rare,      "#35b083"),
         };
 
@@ -76,7 +77,7 @@ namespace CrossHop.EditorTools
             EnsureFolder($"{Root}/Art/Characters");
 
             DifficultyCurve difficulty = CreateOrLoad<DifficultyCurve>($"{Root}/Settings/Difficulty_Default.asset");
-            var needAbilities = new List<string>();
+            var abilitiesAssigned = new List<string>();
 
             AssetDatabase.StartAssetEditing();
             var characters = new List<CharacterData>(Roster.Length);
@@ -108,11 +109,14 @@ namespace CrossHop.EditorTools
                     character.premiumOnly = e.Premium;
                     character.unlockCost = CostFor(e);
                     character.defaultWorld = world;
+                    if (!string.IsNullOrEmpty(e.AbilityNote))
+                    {
+                        character.ability = CreateAbility(e.AbilityNote);
+                        abilitiesAssigned.Add($"{e.Name} → {e.AbilityNote}");
+                    }
                     EditorUtility.SetDirty(character);
 
                     characters.Add(character);
-                    if (!string.IsNullOrEmpty(e.AbilityNote))
-                        needAbilities.Add($"{e.Name} → {e.AbilityNote}");
                 }
             }
             finally
@@ -140,7 +144,34 @@ namespace CrossHop.EditorTools
             Debug.Log($"[CrossHop] Roster built: {characters.Count} characters + worlds. " +
                       "Next: drop voxel prefabs on each CharacterData.modelPrefab, assign lane " +
                       "ground/obstacle prefabs, then run Bake Character Icons.\n" +
-                      $"Characters awaiting ability assets (not yet authored): {string.Join(", ", needAbilities)}.");
+                      $"Abilities assigned: {string.Join(", ", abilitiesAssigned)}.");
+        }
+
+        private static CharacterAbility CreateAbility(string kind)
+        {
+            string dir = $"{Root}/Art/Characters/Abilities";
+            EnsureFolder(dir);
+            switch (kind)
+            {
+                case "LowGravity":
+                    var lg = CreateOrLoad<LowGravityAbility>($"{dir}/LowGravity.asset");
+                    lg.description = "Moon-jump: a floatier, higher hop.";
+                    EditorUtility.SetDirty(lg);
+                    return lg;
+                case "Fireproof":
+                    var fp = CreateOrLoad<FireproofAbility>($"{dir}/Fireproof.asset");
+                    fp.description = "Survive the first fatal hazard each run.";
+                    EditorUtility.SetDirty(fp);
+                    return fp;
+                case "CoinMagnet":
+                    var cm = CreateOrLoad<CoinMagnetAbility>($"{dir}/CoinMagnet.asset");
+                    cm.description = "Pulls nearby coins toward you.";
+                    EditorUtility.SetDirty(cm);
+                    return cm;
+                default:
+                    Debug.LogWarning($"[CrossHop] Unknown ability kind '{kind}'.");
+                    return null;
+            }
         }
 
         private static int CostFor(Entry e)

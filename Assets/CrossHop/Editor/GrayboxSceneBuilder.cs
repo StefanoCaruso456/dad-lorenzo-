@@ -50,13 +50,18 @@ namespace CrossHop.EditorTools
             var gmGo = new GameObject("GameManager");
             var gm = gmGo.AddComponent<GameManager>();
 
+            // --- Field coins (inert until a Coin prefab is assigned) ---
+            var coinGo = new GameObject("CoinField");
+            var coinField = coinGo.AddComponent<CoinField>();
+
             // --- Wire serialized references via SerializedObject (survives save) ---
             var world = FindFirstAsset<CrossHop.Gameplay.WorldTheme>();
             Wire(player, ("grid", grid), ("laneGenerator", generator), ("input", input));
             Wire(generator, ("grid", grid));
             Wire(camFollow, ("grid", grid), ("player", player));
-            Wire(gm, ("laneGenerator", generator), ("player", player),
-                     ("cameraFollow", camFollow), ("economy", economy), ("fallbackWorld", world));
+            Wire(coinField, ("grid", grid), ("laneGenerator", generator), ("player", player));
+            Wire(gm, ("laneGenerator", generator), ("player", player), ("cameraFollow", camFollow),
+                     ("economy", economy), ("coinField", coinField), ("fallbackWorld", world));
 
             string worldNote = world != null
                 ? $"Fallback world '{world.name}' wired automatically."

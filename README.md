@@ -80,6 +80,14 @@ owned character), **buy** (spend coins to unlock), **roll** (prize machine; new 
 each raising events the menu UI binds to. `GameManager` drives run state (Menu → Playing → GameOver) and
 `Restart()`. UI never touches save data directly.
 
+### Abilities & field coins
+Abilities follow the **definition ↔ runtime** split: `CharacterAbility` is a read-only ScriptableObject
+(config + `CreateRuntime()`), and per-run mutable state lives in a fresh `AbilityRuntime` created each run
+and discarded on death — never on the shared asset. Runtimes hook `Tick`, `ModifyCoinReward`,
+`TryAbsorbDeath` (player survives with brief invulnerability) and `ModifyHopProfile`. Shipping abilities:
+**Low-G Hop** (Eileen), **Fireproof** (Blaze), **Coin Magnet** (Pixel), plus a Double Coins sample.
+`CoinField` spawns pooled collectible `Coin`s on safe lanes; the magnet pulls them via `PullToward`.
+
 ### Character asset pipeline (3D voxel → 2D sprite)
 Each character is one `CharacterData` asset holding both representations:
 `modelPrefab` (3D voxel prefab, in-game) and `thumbnail` (2D sprite, menu). **Don't hand-draw the menu
