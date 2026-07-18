@@ -44,20 +44,47 @@ Everything spawned is **object-pooled** (no `Instantiate`/`Destroy` mid-run). Al
 Assets/CrossHop/Scripts/
 ├─ Core/         GridSettings (tunable grid) · ObjectPool
 ├─ Input/        InputReader (swipe on device, WASD in editor → hop events)
-├─ Gameplay/     LaneType · LaneDefinition · DifficultyCurve
-│                MovingObstacle · Lane · LaneGenerator (streams & recycles)
+├─ Gameplay/     LaneType · LaneDefinition · DifficultyCurve · WorldTheme
+│                MovingObstacle · Lane · LaneGenerator (world-driven, streams & recycles)
 │                PlayerController (grid hops, death, log-riding)
 │                CameraFollow (forward death-scroll) · GameManager (run flow)
-├─ Characters/   CharacterData · CharacterDB · Rarity
-│                CharacterAbility (+ AbilityContext) · Abilities/DoubleCoinsAbility
+├─ Characters/   CharacterData (→ modelPrefab, thumbnail, defaultWorld) · CharacterDB
+│                Rarity · CharacterAbility (+ AbilityContext) · Abilities/DoubleCoinsAbility
 ├─ Economy/      SaveData · SaveSystem (atomic local JSON) · EconomyManager
-└─ Meta/         GachaController (rarity-weighted rolls)
+└─ Meta/         GachaController (rolls) · CharacterSelectionController (select/buy/roll flow)
 
 Assets/CrossHop/Editor/
-└─ GrayboxSceneBuilder (Tools ▸ CrossHop ▸ Build Gray-box Scene)
+├─ GrayboxSceneBuilder     Tools ▸ CrossHop ▸ Build Gray-box Scene
+├─ SampleContentBuilder    Tools ▸ CrossHop ▸ Create Sample Content (Farmland + Cluck)
+├─ CharacterThumbnailBaker Tools ▸ CrossHop ▸ Bake Character Icons
+└─ VoxelAssetPostprocessor auto-applies crisp-voxel import settings to Art/Models
+
+Assets/CrossHop/Art/
+├─ Models/       voxel sources (.vox/.fbx, LFS)   ├─ Characters/  CharacterData + CharacterDB
+├─ Prefabs/      3D character prefabs             └─ Worlds/       WorldTheme + LaneDefinitions
+└─ Thumbnails/   baked 2D menu sprites (generated)
 ```
 
 Two assemblies (`CrossHop.Runtime`, `CrossHop.Editor`) keep compile times low and editor-only code out of builds.
+
+### Data flow (source of truth → run)
+`SaveData` → **`EconomyManager`** (runtime authority for wallet / collection / selection) → events.
+Selecting a character stores its id; at run start `GameManager` reads the selected `CharacterData`,
+follows `defaultWorld` to a **`WorldTheme`**, and calls `LaneGenerator.Configure(world)`. The generator
+streams that world's lane set. **The character you pick decides the world you play** — no code branches per world.
+
+### User flows
+`CharacterSelectionController` exposes the three player actions over the data layer — **select** (equip an
+owned character), **buy** (spend coins to unlock), **roll** (prize machine; new unlocks, duplicates refund) —
+each raising events the menu UI binds to. `GameManager` drives run state (Menu → Playing → GameOver) and
+`Restart()`. UI never touches save data directly.
+
+### Character asset pipeline (3D voxel → 2D sprite)
+Each character is one `CharacterData` asset holding both representations:
+`modelPrefab` (3D voxel prefab, in-game) and `thumbnail` (2D sprite, menu). **Don't hand-draw the menu
+icons** — drop the prefab in, run **Bake Character Icons**, and the sprite is rendered from the prefab at a
+fixed ¾ angle and assigned automatically, so the two never drift. Voxel models imported into `Art/Models`
+get Point-filter / uncompressed settings applied automatically.
 
 ## Adding a character
 1. `Create ▸ CrossHop ▸ Character`, set a **stable `id`** (never change once shipped), name, rarity, model, cost.

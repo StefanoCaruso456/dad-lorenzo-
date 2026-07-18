@@ -51,15 +51,18 @@ namespace CrossHop.EditorTools
             var gm = gmGo.AddComponent<GameManager>();
 
             // --- Wire serialized references via SerializedObject (survives save) ---
+            var world = FindFirstAsset<CrossHop.Gameplay.WorldTheme>();
             Wire(player, ("grid", grid), ("laneGenerator", generator), ("input", input));
             Wire(generator, ("grid", grid));
             Wire(camFollow, ("grid", grid), ("player", player));
             Wire(gm, ("laneGenerator", generator), ("player", player),
-                     ("cameraFollow", camFollow), ("economy", economy));
+                     ("cameraFollow", camFollow), ("economy", economy), ("fallbackWorld", world));
 
-            Debug.Log("[CrossHop] Gray-box scene built. Assign LaneDefinitions, a Lane prefab, " +
-                      "a DifficultyCurve and a MovingObstacle prefab on LaneGenerator, then press Play. " +
-                      "Call GameManager.StartRun() from a temporary UI button or a bootstrap script.");
+            string worldNote = world != null
+                ? $"Fallback world '{world.name}' wired automatically."
+                : "No WorldTheme found — run Tools ▸ CrossHop ▸ Create Sample Content first, then re-run this.";
+            Debug.Log("[CrossHop] Gray-box scene built. Assign a Lane prefab + MovingObstacle prefab, " +
+                      $"then press Play and call GameManager.StartRun(). {worldNote}");
             Selection.activeGameObject = gmGo;
         }
 
@@ -73,6 +76,14 @@ namespace CrossHop.EditorTools
                 else Debug.LogWarning($"[CrossHop] Field '{field}' not found on {target.GetType().Name}.");
             }
             so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static T FindFirstAsset<T>() where T : Object
+        {
+            string[] guids = AssetDatabase.FindAssets("t:" + typeof(T).Name);
+            return guids.Length > 0
+                ? AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(guids[0]))
+                : null;
         }
 
         private static GridSettings LoadOrCreateGrid()

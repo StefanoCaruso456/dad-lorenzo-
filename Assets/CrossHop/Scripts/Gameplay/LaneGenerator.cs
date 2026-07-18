@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CrossHop.Core;
 using UnityEngine;
@@ -5,18 +6,17 @@ using UnityEngine;
 namespace CrossHop.Gameplay
 {
     /// <summary>
-    /// Streams the world ahead of the player and recycles it behind. Keeps a fixed
-    /// window of lanes alive at all times; every lane and every obstacle is pooled,
-    /// so a run of any length allocates nothing after warm-up.
+    /// Streams the world ahead of the player and recycles it behind. The lane set and
+    /// difficulty come from a <see cref="WorldTheme"/> supplied by <see cref="Configure"/>
+    /// at run start — so which world streams is driven by the selected character, not
+    /// hard-wired here. Every lane and obstacle is pooled; a run of any length allocates
+    /// nothing after warm-up. Obstacle pools are keyed by LaneDefinition and shared
+    /// across worlds, so switching characters reuses them.
     /// </summary>
     public sealed class LaneGenerator : MonoBehaviour
     {
         [Header("Config")]
         [SerializeField] private GridSettings grid;
-        [SerializeField] private DifficultyCurve difficulty;
-
-        [Tooltip("Lane templates to choose from. Include at least one Safe lane.")]
-        [SerializeField] private LaneDefinition[] laneDefinitions;
 
         [Tooltip("Empty GameObject with a Lane component used as the pooled lane prefab.")]
         [SerializeField] private Lane lanePrefab;
@@ -30,15 +30,40 @@ namespace CrossHop.Gameplay
         private readonly Dictionary<int, Lane> _lanes = new();
         private readonly Dictionary<LaneDefinition, ObjectPool> _obstaclePools = new();
         private ObjectPool _lanePool;
+        private Transform _obstacleRoot;
+        private WorldTheme _world;
         private int _highestRowBuilt = -1;
 
         public GridSettings Grid => grid;
+        public WorldTheme World => _world;
 
-        private void Awake() => BuildPools();
+        private void Awake()
+        {
+            var laneRoot = new GameObject("LanePool").transform;
+            laneRoot.SetParent(transform, false);
+            _lanePool = new ObjectPool(lanePrefab.gameObject, laneRoot, prewarm: rowsAhead + rowsBehind + 2);
+
+            _obstacleRoot = new GameObject("ObstaclePools").transform;
+            _obstacleRoot.SetParent(transform, false);
+        }
+
+        /// <summary>Set the world to stream. Call before <see cref="ResetWorld"/>.</summary>
+        public void Configure(WorldTheme world)
+        {
+            _world = world != null ? world : throw new ArgumentNullException(nameof(world));
+            if (!world.IsValid)
+                Debug.LogError($"[LaneGenerator] World '{world.name}' is missing a safe lane or hazard lanes.", world);
+        }
 
         /// <summary>Reset the world to the start state for a new run.</summary>
         public void ResetWorld()
         {
+            if (_world == null)
+            {
+                Debug.LogError("[LaneGenerator] Configure(world) must be called before ResetWorld().");
+                return;
+            }
+
             foreach (Lane lane in _lanes.Values)
             {
                 lane.ClearObstacles();
@@ -77,26 +102,26 @@ namespace CrossHop.Gameplay
 
         // ---- Internals ----------------------------------------------------
 
-        private void BuildPools()
+        private ObjectPool EnsureObstaclePool(LaneDefinition def)
         {
-            var laneRoot = new GameObject("LanePool").transform;
-            laneRoot.SetParent(transform, false);
-            _lanePool = new ObjectPool(lanePrefab.gameObject, laneRoot, prewarm: rowsAhead + rowsBehind + 2);
+            if (def == null || def.obstaclePrefab == null) return null;
+            if (_obstaclePools.TryGetValue(def, out ObjectPool pool)) return pool;
 
-            foreach (LaneDefinition def in laneDefinitions)
-            {
-                if (def == null || def.obstaclePrefab == null) continue;
-                var root = new GameObject($"ObstaclePool_{def.name}").transform;
-                root.SetParent(transform, false);
-                _obstaclePools[def] = new ObjectPool(def.obstaclePrefab, root, prewarm: 8);
-            }
+            var root = new GameObject($"Pool_{def.name}").transform;
+            root.SetParent(_obstacleRoot, false);
+            pool = new ObjectPool(def.obstaclePrefab, root, prewarm: 8);
+            _obstaclePools[def] = pool;
+            return pool;
         }
 
         private void BuildLane(int row, bool forceSafe)
         {
             if (_lanes.ContainsKey(row)) return;
 
-            LaneDefinition def = forceSafe ? FindSafeDefinition() : PickDefinition(row);
+            LaneDefinition def = forceSafe ? _world.safeLane : PickDefinition(row);
+            if (def == null) def = _world.safeLane;
+            if (def == null) return; // world misconfigured; already logged in Configure
+
             var pos = new Vector3(0f, 0f, row * grid.cellSize);
             GameObject go = _lanePool.Get(pos, Quaternion.identity);
             go.name = $"Lane_{row}";
@@ -104,7 +129,7 @@ namespace CrossHop.Gameplay
             var lane = go.GetComponent<Lane>();
             float speed = ResolveSpeed(def, row);
             float interval = ResolveSpawnInterval(def, row);
-            ObjectPool obstaclePool = def.obstaclePrefab != null ? _obstaclePools[def] : null;
+            ObjectPool obstaclePool = EnsureObstaclePool(def);
 
             lane.Init(grid, def, row, speed, interval, obstaclePool);
 
@@ -114,37 +139,30 @@ namespace CrossHop.Gameplay
 
         private LaneDefinition PickDefinition(int row)
         {
-            if (Random.value < difficulty.SafeLaneChance(row))
-                return FindSafeDefinition();
+            DifficultyCurve diff = _world.difficulty;
+            float safeChance = diff != null ? diff.SafeLaneChance(row) : 0.35f;
+            if (UnityEngine.Random.value < safeChance) return _world.safeLane;
 
-            // Pick any non-safe lane; if none authored, fall back to safe.
-            var hazards = new List<LaneDefinition>();
-            foreach (LaneDefinition d in laneDefinitions)
-                if (d != null && d.type != LaneType.Safe) hazards.Add(d);
-
-            return hazards.Count > 0 ? hazards[Random.Range(0, hazards.Count)] : FindSafeDefinition();
-        }
-
-        private LaneDefinition FindSafeDefinition()
-        {
-            foreach (LaneDefinition d in laneDefinitions)
-                if (d != null && d.type == LaneType.Safe) return d;
-
-            Debug.LogError("[LaneGenerator] No Safe LaneDefinition assigned.");
-            return laneDefinitions.Length > 0 ? laneDefinitions[0] : null;
+            LaneDefinition[] hazards = _world.hazardLanes;
+            return (hazards != null && hazards.Length > 0)
+                ? hazards[UnityEngine.Random.Range(0, hazards.Length)]
+                : _world.safeLane;
         }
 
         private float ResolveSpeed(LaneDefinition def, int row)
         {
             if (def.obstaclePrefab == null) return 0f;
-            float baseSpeed = Random.Range(def.minSpeed, def.maxSpeed) * difficulty.SpeedMultiplier(row);
+            float mult = _world.difficulty != null ? _world.difficulty.SpeedMultiplier(row) : 1f;
+            float baseSpeed = UnityEngine.Random.Range(def.minSpeed, def.maxSpeed) * mult;
             // Alternate travel direction by row parity for readable, varied traffic.
             float signed = (row % 2 == 0 ? 1f : -1f) * baseSpeed;
             return signed * grid.cellSize;
         }
 
         private float ResolveSpawnInterval(LaneDefinition def, int row)
-            => Random.Range(def.minSpawnInterval, def.maxSpawnInterval)
-               * difficulty.SpawnIntervalMultiplier(row);
+        {
+            float mult = _world.difficulty != null ? _world.difficulty.SpawnIntervalMultiplier(row) : 1f;
+            return UnityEngine.Random.Range(def.minSpawnInterval, def.maxSpawnInterval) * mult;
+        }
     }
 }

@@ -1,3 +1,4 @@
+using CrossHop.Gameplay;
 using UnityEngine;
 
 namespace CrossHop.Characters
@@ -17,11 +18,16 @@ namespace CrossHop.Characters
         public Rarity rarity = Rarity.Common;
 
         [Header("Presentation")]
-        [Tooltip("Prefab shown in-game and in the collection screen.")]
+        [Tooltip("The 3D voxel prefab used in-game.")]
         public GameObject modelPrefab;
+        [Tooltip("2D sprite for the selection menu. Bake it from the prefab via Tools ▸ CrossHop ▸ Bake Character Icons.")]
         public Sprite thumbnail;
         [Tooltip("Optional SFX played on each hop. Falls back to a default if empty.")]
         public AudioClip hopSound;
+
+        [Header("World")]
+        [Tooltip("The world this character brings. Selecting the character loads it.")]
+        public WorldTheme defaultWorld;
 
         [Header("Economy")]
         [Tooltip("Coin cost to unlock via the prize machine, if directly purchasable.")]

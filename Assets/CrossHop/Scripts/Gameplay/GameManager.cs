@@ -20,6 +20,10 @@ namespace CrossHop.Gameplay
         [SerializeField] private CameraFollow cameraFollow;
         [SerializeField] private EconomyManager economy;
 
+        [Header("World")]
+        [Tooltip("World loaded when the selected character has none (also the very first launch).")]
+        [SerializeField] private WorldTheme fallbackWorld;
+
         [Header("Scoring")]
         [Tooltip("Coins awarded per row of distance, before ability modifiers.")]
         [SerializeField] private int coinsPerRow = 1;
@@ -49,17 +53,33 @@ namespace CrossHop.Gameplay
         {
             Score = 0;
 
+            // Data flow: selected character -> its world -> configure the generator.
+            CharacterData character = economy.SelectedCharacter;
+            WorldTheme world = character != null && character.defaultWorld != null
+                ? character.defaultWorld
+                : fallbackWorld;
+
+            if (world == null)
+            {
+                Debug.LogError("[GameManager] No world to load — assign a fallbackWorld or give the selected character a defaultWorld.");
+                return;
+            }
+
+            laneGenerator.Configure(world);
             laneGenerator.ResetWorld();
             player.ResetToStart();
             cameraFollow.Begin();
 
             _abilityContext = new AbilityContext(player.transform);
-            _activeAbility = economy.SelectedCharacter != null ? economy.SelectedCharacter.ability : null;
+            _activeAbility = character != null ? character.ability : null;
             _activeAbility?.OnRunStart(_abilityContext);
 
             State = GameState.Playing;
             OnRunStarted?.Invoke();
         }
+
+        /// <summary>Restart into a fresh run (user flow: the game-over "Retry" button).</summary>
+        public void Restart() => StartRun();
 
         private void HandleRowAdvanced(int furthestRow)
         {
