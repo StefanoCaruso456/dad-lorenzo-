@@ -54,6 +54,7 @@ Assets/CrossHop/Scripts/
 └─ Meta/         GachaController (rolls) · CharacterSelectionController (select/buy/roll flow)
 
 Assets/CrossHop/Editor/
+├─ RosterBuilder           Tools ▸ CrossHop ▸ Build Full Roster (20 characters)
 ├─ GrayboxSceneBuilder     Tools ▸ CrossHop ▸ Build Gray-box Scene
 ├─ SampleContentBuilder    Tools ▸ CrossHop ▸ Create Sample Content (Farmland + Cluck)
 ├─ CharacterThumbnailBaker Tools ▸ CrossHop ▸ Bake Character Icons
