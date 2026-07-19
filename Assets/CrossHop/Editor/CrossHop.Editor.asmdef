@@ -2,7 +2,10 @@
   "name": "CrossHop.Editor",
   "rootNamespace": "CrossHop.EditorTools",
   "references": [
-    "CrossHop.Runtime"
+    "CrossHop.Runtime",
+    "Unity.TextMeshPro",
+    "Unity.InputSystem",
+    "UnityEngine.UI"
   ],
   "includePlatforms": [
     "Editor"

@@ -23,16 +23,13 @@ An endless *Crossy Road / Frogger*-style arcade hopper for mobile (iOS/Android),
 3. Packages in `Packages/manifest.json` (URP, Input System, Cinemachine, TextMeshPro) restore automatically.
 
 ### Build the gray-box prototype (M1)
-The fastest path to pressing **Play**:
+The fastest path to pressing **Play** — three menu clicks, no manual wiring:
 
-1. Open a new empty scene (`File ▸ New Scene ▸ Basic`).
-2. Run **Tools ▸ CrossHop ▸ Build Gray-box Scene**. This spawns a cube player, the lane generator, camera and managers, and wires all serialized references.
-3. Create the content assets it needs (right-click in Project ▸ *Create ▸ CrossHop ▸ …*):
-   - one **Lane Definition** of type *Safe* and one of type *Road*,
-   - a **Difficulty Curve**,
-   - a **Lane** prefab (empty GameObject + `Lane` component),
-   - a **MovingObstacle** prefab (cube + `MovingObstacle` component) referenced by the Road lane.
-4. Assign those on the `LaneGenerator`, then trigger `GameManager.StartRun()` (a temporary UI button or bootstrap script).
+1. **Tools ▸ CrossHop ▸ Build Full Roster** (or *Create Sample Content*) — generates the worlds/characters so there's a world to load.
+2. **Tools ▸ CrossHop ▸ Build Gray-box Scene** in a new empty scene — spawns the player, systems, camera, light, generated gray-box prefabs (lane/obstacle/coin), a HUD (score, coins, game-over + retry), and a bootstrap that auto-starts a run. Everything is wired.
+3. Press **Play** — hop with WASD/arrows in the editor. Lanes are colour-coded by type, coins spawn on grass, and the game-over screen shows score/best/coins with a Retry button.
+
+> If HUD text is invisible on first run, accept Unity's **Import TMP Essentials** prompt.
 
 ---
 

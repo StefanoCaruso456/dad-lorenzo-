@@ -11,6 +11,10 @@ namespace CrossHop.Gameplay
     /// </summary>
     public sealed class Lane : MonoBehaviour
     {
+        [Tooltip("Optional strip mesh stretched to the lane width and tinted by type. " +
+                 "Used for the gray-box look; real worlds can leave this empty and use art.")]
+        [SerializeField] private Renderer bodyRenderer;
+
         private GridSettings _grid;
         private LaneDefinition _def;
         private int _row;
@@ -19,6 +23,10 @@ namespace CrossHop.Gameplay
         private float _spawnTimer;
         private ObjectPool _obstaclePool;
         private readonly List<MovingObstacle> _active = new();
+
+        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        private static readonly int ColorId = Shader.PropertyToID("_Color");
+        private MaterialPropertyBlock _mpb;
 
         public LaneType Type => _def != null ? _def.type : LaneType.Safe;
         public int Row => _row;
@@ -36,6 +44,31 @@ namespace CrossHop.Gameplay
 
             // Stagger the first spawn so lanes don't pulse in lockstep.
             _spawnTimer = Random.Range(0f, spawnInterval);
+
+            StyleBody();
+        }
+
+        private void StyleBody()
+        {
+            if (bodyRenderer == null) return;
+
+            // Stretch to the full playfield width, one cell deep.
+            bodyRenderer.transform.localScale =
+                new Vector3(_grid.laneWidth * _grid.cellSize, bodyRenderer.transform.localScale.y, _grid.cellSize);
+
+            _mpb ??= new MaterialPropertyBlock();
+            Color c = Type switch
+            {
+                LaneType.Safe => new Color(0.42f, 0.68f, 0.35f),
+                LaneType.Road => new Color(0.28f, 0.29f, 0.33f),
+                LaneType.Water => new Color(0.25f, 0.55f, 0.80f),
+                LaneType.Rail => new Color(0.45f, 0.36f, 0.28f),
+                _ => Color.grey
+            };
+            bodyRenderer.GetPropertyBlock(_mpb);
+            _mpb.SetColor(BaseColorId, c);
+            _mpb.SetColor(ColorId, c);
+            bodyRenderer.SetPropertyBlock(_mpb);
         }
 
         private void Update()
