@@ -8,18 +8,19 @@ namespace CrossHop.EditorTools
 {
     /// <summary>
     /// Builds chunky Crossy-Road-style models out of cubes — cars, logs, a train, and a
-    /// chick — as prefabs with saved (persistent) materials, then assigns them into every
-    /// world's lanes by type (road→car, water→log, rail→train) and dresses the scene's
-    /// player as the chick. Vehicles get a <see cref="RandomVoxelColor"/> so each spawn is
-    /// a different colour — the variety that sells the look. No external art needed.
+    /// chick — as prefabs, then assigns them into every world's lanes by type
+    /// (road→car, water→log, rail→train) and dresses the scene's player as the chick.
     ///
-    /// Re-run any time (it overwrites the prefabs in place). Menu: Tools ▸ CrossHop ▸ Build Voxel Models.
+    /// Colouring is done at runtime via MaterialPropertyBlock on Unity's default material
+    /// (<see cref="VoxelTint"/> for fixed parts, <see cref="RandomVoxelColor"/> for the
+    /// per-spawn body colour). We never assign a custom material — that's what avoids the
+    /// magenta "missing shader" look and gives a road of differently-coloured cars.
+    ///
+    /// Re-run any time (overwrites the prefabs in place). Menu: Tools ▸ CrossHop ▸ Build Voxel Models.
     /// </summary>
     public static class VoxelModelBuilder
     {
         private const string Dir = "Assets/CrossHop/Art/_Voxel";
-        private const string MatDir = "Assets/CrossHop/Art/_Voxel/Materials";
-        private static readonly Dictionary<string, Material> _matCache = new();
 
         private static readonly Color[] CarPalette =
         {
@@ -29,8 +30,8 @@ namespace CrossHop.EditorTools
         };
         private static readonly Color[] LogPalette =
         {
-            new(0.29f, 0.2f, 0.12f), new(0.36f, 0.25f, 0.15f),
-            new(0.42f, 0.3f, 0.18f), new(0.24f, 0.16f, 0.1f),
+            new(0.42f, 0.29f, 0.17f), new(0.5f, 0.36f, 0.22f),
+            new(0.36f, 0.24f, 0.14f), new(0.55f, 0.4f, 0.26f),
         };
         private static readonly Color[] TrainPalette =
         {
@@ -42,8 +43,6 @@ namespace CrossHop.EditorTools
         public static void Build()
         {
             EnsureFolder(Dir);
-            EnsureFolder(MatDir);
-            _matCache.Clear();
 
             GameObject car = BuildCar();
             GameObject log = BuildLog();
@@ -80,7 +79,7 @@ namespace CrossHop.EditorTools
             }
 
             Debug.Log($"[CrossHop] Voxel models built — colourful cars on {roads} roads, logs on {waters} " +
-                      $"rivers, trains on {rails} rails. Each vehicle spawns a random colour. {playerNote}");
+                      $"rivers, trains on {rails} rails. Colours applied at runtime (no magenta). {playerNote}");
             Selection.activeObject = car;
         }
 
@@ -91,16 +90,17 @@ namespace CrossHop.EditorTools
             var root = new GameObject("Voxel_Car");
             SetLength(root.AddComponent<MovingObstacle>(), 1.1f);
 
-            GameObject chassis = Cube(root, "Chassis", new(0f, 0.22f, 0f), new(1.15f, 0.4f, 0.7f), Mat("v_body", Color.gray));
-            GameObject cabin = Cube(root, "Cabin", new(0.05f, 0.52f, 0f), new(0.62f, 0.34f, 0.62f), Mat("v_body", Color.gray));
-            Cube(root, "Window", new(0.06f, 0.52f, 0f), new(0.64f, 0.22f, 0.5f), Mat("glass", new(0.55f, 0.8f, 0.95f)));
-            Material wheel = Mat("wheel", new(0.12f, 0.12f, 0.14f));
-            Cube(root, "WheelFL", new(0.38f, 0.08f, 0.32f), new(0.26f, 0.26f, 0.14f), wheel);
-            Cube(root, "WheelFR", new(0.38f, 0.08f, -0.32f), new(0.26f, 0.26f, 0.14f), wheel);
-            Cube(root, "WheelBL", new(-0.38f, 0.08f, 0.32f), new(0.26f, 0.26f, 0.14f), wheel);
-            Cube(root, "WheelBR", new(-0.38f, 0.08f, -0.32f), new(0.26f, 0.26f, 0.14f), wheel);
+            GameObject chassis = Cube(root, "Chassis", new(0f, 0.22f, 0f), new(1.15f, 0.4f, 0.7f));
+            GameObject cabin = Cube(root, "Cabin", new(0.05f, 0.52f, 0f), new(0.62f, 0.34f, 0.62f));
+            GameObject window = Cube(root, "Window", new(0.06f, 0.52f, 0f), new(0.64f, 0.22f, 0.5f));
+            GameObject wFL = Cube(root, "WheelFL", new(0.38f, 0.08f, 0.32f), new(0.26f, 0.26f, 0.14f));
+            GameObject wFR = Cube(root, "WheelFR", new(0.38f, 0.08f, -0.32f), new(0.26f, 0.26f, 0.14f));
+            GameObject wBL = Cube(root, "WheelBL", new(-0.38f, 0.08f, 0.32f), new(0.26f, 0.26f, 0.14f));
+            GameObject wBR = Cube(root, "WheelBR", new(-0.38f, 0.08f, -0.32f), new(0.26f, 0.26f, 0.14f));
 
-            AddRandomColor(root, new[] { chassis.GetComponent<Renderer>(), cabin.GetComponent<Renderer>() }, CarPalette);
+            AddRandomColor(root, R(chassis, cabin), CarPalette);
+            AddTint(root, R(window), new Color(0.55f, 0.8f, 0.95f));
+            AddTint(root, R(wFL, wFR, wBL, wBR), new Color(0.12f, 0.12f, 0.14f));
             return SaveAndDestroy(root, $"{Dir}/Voxel_Car.prefab");
         }
 
@@ -109,12 +109,12 @@ namespace CrossHop.EditorTools
             var root = new GameObject("Voxel_Log");
             SetLength(root.AddComponent<MovingObstacle>(), 2f);
 
-            GameObject trunk = Cube(root, "Trunk", new(0f, 0.16f, 0f), new(2.0f, 0.34f, 0.7f), Mat("v_body", Color.gray));
-            Material ring = Mat("log_ring", new(0.62f, 0.47f, 0.30f));
-            Cube(root, "RingL", new(-1.0f, 0.16f, 0f), new(0.08f, 0.36f, 0.72f), ring);
-            Cube(root, "RingR", new(1.0f, 0.16f, 0f), new(0.08f, 0.36f, 0.72f), ring);
+            GameObject trunk = Cube(root, "Trunk", new(0f, 0.16f, 0f), new(2.0f, 0.34f, 0.7f));
+            GameObject ringL = Cube(root, "RingL", new(-1.0f, 0.16f, 0f), new(0.08f, 0.36f, 0.72f));
+            GameObject ringR = Cube(root, "RingR", new(1.0f, 0.16f, 0f), new(0.08f, 0.36f, 0.72f));
 
-            AddRandomColor(root, new[] { trunk.GetComponent<Renderer>() }, LogPalette);
+            AddRandomColor(root, R(trunk), LogPalette);
+            AddTint(root, R(ringL, ringR), new Color(0.68f, 0.52f, 0.34f));
             return SaveAndDestroy(root, $"{Dir}/Voxel_Log.prefab");
         }
 
@@ -123,40 +123,53 @@ namespace CrossHop.EditorTools
             var root = new GameObject("Voxel_Train");
             SetLength(root.AddComponent<MovingObstacle>(), 5f);
 
-            GameObject body = Cube(root, "Body", new(0f, 0.45f, 0f), new(4.9f, 0.85f, 0.8f), Mat("v_body", Color.gray));
-            Cube(root, "Front", new(2.4f, 0.45f, 0f), new(0.25f, 0.85f, 0.82f), Mat("train_front", new(0.9f, 0.9f, 0.95f)));
-            Material win = Mat("train_window", new(1f, 0.9f, 0.5f));
+            GameObject body = Cube(root, "Body", new(0f, 0.45f, 0f), new(4.9f, 0.85f, 0.8f));
+            GameObject front = Cube(root, "Front", new(2.4f, 0.45f, 0f), new(0.25f, 0.85f, 0.82f));
+            var windows = new List<GameObject>();
             for (int i = 0; i < 5; i++)
             {
                 float x = -1.8f + i * 0.9f;
-                Cube(root, $"Win{i}a", new(x, 0.55f, 0.42f), new(0.4f, 0.3f, 0.06f), win);
-                Cube(root, $"Win{i}b", new(x, 0.55f, -0.42f), new(0.4f, 0.3f, 0.06f), win);
+                windows.Add(Cube(root, $"Win{i}a", new(x, 0.55f, 0.42f), new(0.4f, 0.3f, 0.06f)));
+                windows.Add(Cube(root, $"Win{i}b", new(x, 0.55f, -0.42f), new(0.4f, 0.3f, 0.06f)));
             }
 
-            AddRandomColor(root, new[] { body.GetComponent<Renderer>() }, TrainPalette);
+            AddRandomColor(root, R(body), TrainPalette);
+            AddTint(root, R(front), new Color(0.92f, 0.92f, 0.95f));
+            AddTint(root, R(windows.ToArray()), new Color(1f, 0.9f, 0.5f));
             return SaveAndDestroy(root, $"{Dir}/Voxel_Train.prefab");
         }
 
         private static GameObject BuildChick()
         {
             var root = new GameObject("Voxel_Chick");
-            Material yellow = Mat("chick_body", new(1f, 0.83f, 0.25f));
-            Material orange = Mat("chick_beak", new(0.95f, 0.55f, 0.12f));
-            Material red = Mat("chick_comb", new(0.86f, 0.24f, 0.22f));
-            Material black = Mat("chick_eye", new(0.08f, 0.08f, 0.08f));
+            GameObject bodyG = Cube(root, "Body", new(0f, 0.30f, 0f), new(0.5f, 0.45f, 0.5f));
+            GameObject headG = Cube(root, "Head", new(0f, 0.64f, 0.02f), new(0.42f, 0.4f, 0.42f));
+            GameObject combG = Cube(root, "Comb", new(0f, 0.88f, 0f), new(0.12f, 0.16f, 0.3f));
+            GameObject beakG = Cube(root, "Beak", new(0f, 0.6f, 0.27f), new(0.16f, 0.12f, 0.16f));
+            GameObject eyeL = Cube(root, "EyeL", new(-0.12f, 0.7f, 0.21f), new(0.08f, 0.08f, 0.06f));
+            GameObject eyeR = Cube(root, "EyeR", new(0.12f, 0.7f, 0.21f), new(0.08f, 0.08f, 0.06f));
+            GameObject footL = Cube(root, "FootL", new(-0.12f, 0.04f, 0.02f), new(0.1f, 0.08f, 0.22f));
+            GameObject footR = Cube(root, "FootR", new(0.12f, 0.04f, 0.02f), new(0.1f, 0.08f, 0.22f));
 
-            Cube(root, "Body", new(0f, 0.30f, 0f), new(0.5f, 0.45f, 0.5f), yellow);
-            Cube(root, "Head", new(0f, 0.64f, 0.02f), new(0.42f, 0.4f, 0.42f), yellow);
-            Cube(root, "Comb", new(0f, 0.88f, 0f), new(0.12f, 0.16f, 0.3f), red);
-            Cube(root, "Beak", new(0f, 0.6f, 0.27f), new(0.16f, 0.12f, 0.16f), orange);
-            Cube(root, "EyeL", new(-0.12f, 0.7f, 0.21f), new(0.08f, 0.08f, 0.06f), black);
-            Cube(root, "EyeR", new(0.12f, 0.7f, 0.21f), new(0.08f, 0.08f, 0.06f), black);
-            Cube(root, "FootL", new(-0.12f, 0.04f, 0.02f), new(0.1f, 0.08f, 0.22f), orange);
-            Cube(root, "FootR", new(0.12f, 0.04f, 0.02f), new(0.1f, 0.08f, 0.22f), orange);
+            AddTint(root, R(bodyG, headG), new Color(1f, 0.83f, 0.25f));   // yellow
+            AddTint(root, R(combG), new Color(0.86f, 0.24f, 0.22f));       // red comb
+            AddTint(root, R(beakG, footL, footR), new Color(0.95f, 0.55f, 0.12f)); // orange
+            AddTint(root, R(eyeL, eyeR), new Color(0.08f, 0.08f, 0.08f));  // black eyes
             return SaveAndDestroy(root, $"{Dir}/Voxel_Chick.prefab");
         }
 
         // ---- Helpers ------------------------------------------------------
+
+        private static Renderer[] R(params GameObject[] parts)
+        {
+            var list = new List<Renderer>(parts.Length);
+            foreach (GameObject g in parts)
+            {
+                var r = g.GetComponent<Renderer>();
+                if (r != null) list.Add(r);
+            }
+            return list.ToArray();
+        }
 
         private static void Assign(LaneDefinition def, GameObject prefab,
                                    float minSpeed, float maxSpeed, float minInterval, float maxInterval)
@@ -191,32 +204,27 @@ namespace CrossHop.EditorTools
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static GameObject Cube(GameObject parent, string name, Vector3 pos, Vector3 scale, Material mat)
+        private static void AddTint(GameObject root, Renderer[] targets, Color color)
         {
-            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var comp = root.AddComponent<VoxelTint>();
+            var so = new SerializedObject(comp);
+            SerializedProperty t = so.FindProperty("targets");
+            t.arraySize = targets.Length;
+            for (int i = 0; i < targets.Length; i++)
+                t.GetArrayElementAtIndex(i).objectReferenceValue = targets[i];
+            so.FindProperty("color").colorValue = color;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static GameObject Cube(GameObject parent, string name, Vector3 pos, Vector3 scale)
+        {
+            var go = GameObject.CreatePrimitive(PrimitiveType.Cube); // keeps Unity's default (valid) material
             go.name = name;
             Object.DestroyImmediate(go.GetComponent<Collider>());
             go.transform.SetParent(parent.transform, false);
             go.transform.localPosition = pos;
             go.transform.localScale = scale;
-            if (mat != null) go.GetComponent<MeshRenderer>().sharedMaterial = mat;
             return go;
-        }
-
-        private static Material Mat(string key, Color color)
-        {
-            if (_matCache.TryGetValue(key, out Material cached)) return cached;
-            string path = $"{MatDir}/{key}.mat";
-            var existing = AssetDatabase.LoadAssetAtPath<Material>(path);
-            if (existing == null)
-            {
-                Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-                existing = new Material(shader) { color = color };
-                existing.SetColor("_BaseColor", color);
-                AssetDatabase.CreateAsset(existing, path);
-            }
-            _matCache[key] = existing;
-            return existing;
         }
 
         private static GameObject SaveAndDestroy(GameObject go, string path)

@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: CrossHop.Runtime::CrossHop.Gameplay.LaneDefinition
   type: 1
   groundPrefab: {fileID: 0}
-  obstaclePrefab: {fileID: 0}
-  minSpeed: 2
-  maxSpeed: 4
-  minSpawnInterval: 1.2
-  maxSpawnInterval: 2.5
+  obstaclePrefab: {fileID: 3120096939463404854, guid: 4c526ccc335aa420fb46246463dca75a, type: 3}
+  minSpeed: 3
+  maxSpeed: 5
+  minSpawnInterval: 1
+  maxSpawnInterval: 2.2
   minLength: 1
   maxLength: 2

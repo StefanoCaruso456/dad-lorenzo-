@@ -1139,6 +1139,12 @@ MonoBehaviour:
   laneGenerator: {fileID: 246103367}
   input: {fileID: 902219802}
   absorbInvulnerability: 0.8
+  characterModelPrefab: {fileID: 3399001364980104795, guid: 74e0443382a4b403fafd0d84705d8568, type: 3}
+  visual: {fileID: 0}
+  bodyColor: {r: 1, g: 0.85, b: 0.3, a: 1}
+  hopStretch: 0.28
+  landSquash: 0.22
+  squashRecoverSpeed: 9
 --- !u!114 &902219802
 MonoBehaviour:
   m_ObjectHideFlags: 0
