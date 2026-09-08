@@ -3,22 +3,28 @@ using UnityEngine;
 namespace CrossHop.Gameplay
 {
     /// <summary>
-    /// A single moving thing in a lane — a car, truck, train car or floating log.
-    /// Pooled: it drives itself along the lane and reports back to its owning
-    /// <see cref="Lane"/> when it leaves the playfield so it can be recycled.
+    /// A single moving thing in a lane — a car, floating log, or train. Pooled: it drives
+    /// itself along the lane and reports back to its owning <see cref="Lane"/> when it
+    /// leaves the playfield so it can be recycled.
     ///
-    /// For the gray-box it also colours itself by role so the playfield reads clearly:
-    /// <b>brown = a log you ride</b>, <b>red = a hazard you dodge</b>. Real art replaces
-    /// this with proper voxel models.
+    /// If the prefab has a Renderer on its root, it colours itself by role for the
+    /// gray-box (brown = ride, red = dodge). Multi-part voxel prefabs have an empty root
+    /// (no renderer), so they keep their own authored colours untouched.
     /// </summary>
     public sealed class MovingObstacle : MonoBehaviour
     {
+        [Tooltip("How many grid cells this obstacle spans (car≈1, log≈2, train≈5). Used for hit detection.")]
+        [SerializeField] private float lengthCells = 1f;
+
         private float _speed;          // cells/sec, signed by direction
         private float _despawnX;       // world x at which we recycle
         private System.Action<MovingObstacle> _onExit;
 
         /// <summary>True for logs — the player rides these instead of dying.</summary>
         public bool IsRideable { get; private set; }
+
+        /// <summary>Footprint length in cells, for span-aware collision.</summary>
+        public float LengthCells => lengthCells;
 
         private Renderer _renderer;
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
@@ -35,7 +41,7 @@ namespace CrossHop.Gameplay
             IsRideable = rideable;
             _onExit = onExit;
 
-            // Colour by role: logs are safe to ride, everything else is deadly.
+            // Only tint single-mesh gray-box prefabs; voxel prefabs (empty root) keep their colours.
             if (_renderer != null)
                 _renderer.sharedMaterial = rideable ? LogMat() : HazardMat();
         }

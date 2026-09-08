@@ -127,10 +127,11 @@ namespace CrossHop.Gameplay
         public MovingObstacle ObstacleAtColumn(int column)
         {
             float x = column * _grid.cellSize;
-            float tolerance = _grid.cellSize * 0.5f;
             foreach (MovingObstacle o in _active)
             {
-                if (Mathf.Abs(o.transform.position.x - x) <= tolerance)
+                // Span-aware: an obstacle covers half its length either side of its centre.
+                float half = o.LengthCells * 0.5f * _grid.cellSize;
+                if (Mathf.Abs(o.transform.position.x - x) <= half + _grid.cellSize * 0.1f)
                     return o;
             }
             return null;

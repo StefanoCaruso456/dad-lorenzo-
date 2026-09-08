@@ -30,9 +30,11 @@ namespace CrossHop.Gameplay
         [SerializeField] private float absorbInvulnerability = 0.8f;
 
         [Header("Juice")]
+        [Tooltip("Optional voxel character model spawned as the player's body. If empty, the placeholder cube is used.")]
+        [SerializeField] private GameObject characterModelPrefab;
         [Tooltip("Transform that squashes/stretches. Defaults to this object if empty.")]
         [SerializeField] private Transform visual;
-        [Tooltip("Body colour for the gray-box player (a cheerful chick yellow).")]
+        [Tooltip("Body colour for the placeholder cube when no model is set.")]
         [SerializeField] private Color bodyColor = new(1f, 0.85f, 0.30f);
         [Range(0f, 0.6f)] [SerializeField] private float hopStretch = 0.28f;
         [Range(0f, 0.6f)] [SerializeField] private float landSquash = 0.22f;
@@ -68,9 +70,22 @@ namespace CrossHop.Gameplay
 
         private void Awake()
         {
-            if (visual == null) visual = transform;
+            if (characterModelPrefab != null)
+            {
+                // Wear the voxel character: spawn it as the body and hide the placeholder cube.
+                GameObject model = Instantiate(characterModelPrefab, transform);
+                model.transform.localPosition = Vector3.zero;
+                model.transform.localRotation = Quaternion.identity;
+                visual = model.transform;
+                var own = GetComponent<Renderer>();
+                if (own != null) own.enabled = false;
+            }
+            else
+            {
+                if (visual == null) visual = transform;
+                TintBody(); // colour the placeholder cube
+            }
             _baseScale = visual.localScale;
-            TintBody();
         }
 
         private void OnEnable()
