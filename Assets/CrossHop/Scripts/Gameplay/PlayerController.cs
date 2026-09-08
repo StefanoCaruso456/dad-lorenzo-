@@ -16,6 +16,8 @@ namespace CrossHop.Gameplay
     /// Two ability hooks live here but the controller stays ignorant of abilities:
     /// a <see cref="HopProfile"/> scales the hop feel, and a <see cref="DeathGuard"/>
     /// delegate can absorb an otherwise-fatal hit (granting a brief invulnerability).
+    /// Juice: the body squashes on the ground and stretches through the arc, and colours
+    /// itself so the gray-box player reads as a character.
     /// </summary>
     [RequireComponent(typeof(Transform))]
     public sealed class PlayerController : MonoBehaviour
@@ -26,6 +28,15 @@ namespace CrossHop.Gameplay
 
         [Tooltip("Invulnerability granted after a death is absorbed, to hop clear.")]
         [SerializeField] private float absorbInvulnerability = 0.8f;
+
+        [Header("Juice")]
+        [Tooltip("Transform that squashes/stretches. Defaults to this object if empty.")]
+        [SerializeField] private Transform visual;
+        [Tooltip("Body colour for the gray-box player (a cheerful chick yellow).")]
+        [SerializeField] private Color bodyColor = new(1f, 0.85f, 0.30f);
+        [Range(0f, 0.6f)] [SerializeField] private float hopStretch = 0.28f;
+        [Range(0f, 0.6f)] [SerializeField] private float landSquash = 0.22f;
+        [SerializeField] private float squashRecoverSpeed = 9f;
 
         public event Action<int> OnRowAdvanced;         // new furthest row
         public event Action<DeathCause> OnDied;
@@ -49,6 +60,18 @@ namespace CrossHop.Gameplay
         private MovingObstacle _ridingLog;   // non-null while carried across water
         private HopProfile _hopProfile = HopProfile.Default;
         private float _invulnTimer;
+
+        private Vector3 _baseScale = Vector3.one;
+        private float _squash;
+        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        private static readonly int ColorId = Shader.PropertyToID("_Color");
+
+        private void Awake()
+        {
+            if (visual == null) visual = transform;
+            _baseScale = visual.localScale;
+            TintBody();
+        }
 
         private void OnEnable()
         {
@@ -74,6 +97,8 @@ namespace CrossHop.Gameplay
             _ridingLog = null;
             _invulnTimer = 0f;
             _hopProfile = HopProfile.Default;
+            _squash = 0f;
+            if (visual != null) visual.localScale = _baseScale;
             IsAlive = true;
             transform.position = grid.CellToWorld(Column, Row);
         }
@@ -83,8 +108,15 @@ namespace CrossHop.Gameplay
             if (!IsAlive) return;
             if (_invulnTimer > 0f) _invulnTimer -= Time.deltaTime;
 
-            if (_hopping) AnimateHop();
-            else if (_ridingLog != null) DriftWithLog();
+            if (_hopping)
+            {
+                AnimateHop();
+            }
+            else
+            {
+                if (_ridingLog != null) DriftWithLog();
+                RecoverSquash();
+            }
 
             EvaluateCurrentCell();
         }
@@ -139,11 +171,41 @@ namespace CrossHop.Gameplay
             pos.y = Mathf.Sin(t * Mathf.PI) * grid.hopHeight * _hopProfile.HeightMultiplier; // arc
             transform.position = pos;
 
+            // Stretch tall & thin through the arc for a lively hop.
+            float arc = Mathf.Sin(t * Mathf.PI);
+            ApplyScale(1f + hopStretch * arc, 1f - 0.45f * hopStretch * arc);
+
             if (t >= 1f)
             {
                 _hopping = false;
                 transform.position = _hopEnd;
+                _squash = 1f; // impulse a landing squash that recovers over the next frames
             }
+        }
+
+        private void RecoverSquash()
+        {
+            if (_squash <= 0f) return;
+            _squash = Mathf.MoveTowards(_squash, 0f, squashRecoverSpeed * Time.deltaTime);
+            ApplyScale(1f - landSquash * _squash, 1f + 0.45f * landSquash * _squash);
+            if (_squash <= 0f && visual != null) visual.localScale = _baseScale;
+        }
+
+        private void ApplyScale(float yMul, float xzMul)
+        {
+            if (visual == null) return;
+            visual.localScale = new Vector3(_baseScale.x * xzMul, _baseScale.y * yMul, _baseScale.z * xzMul);
+        }
+
+        private void TintBody()
+        {
+            var r = GetComponentInChildren<Renderer>();
+            if (r == null) return;
+            var mpb = new MaterialPropertyBlock();
+            r.GetPropertyBlock(mpb);
+            mpb.SetColor(BaseColorId, bodyColor);
+            mpb.SetColor(ColorId, bodyColor);
+            r.SetPropertyBlock(mpb);
         }
 
         private void DriftWithLog()

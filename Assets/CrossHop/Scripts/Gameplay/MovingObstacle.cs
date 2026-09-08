@@ -6,6 +6,10 @@ namespace CrossHop.Gameplay
     /// A single moving thing in a lane — a car, truck, train car or floating log.
     /// Pooled: it drives itself along the lane and reports back to its owning
     /// <see cref="Lane"/> when it leaves the playfield so it can be recycled.
+    ///
+    /// For the gray-box it also colours itself by role so the playfield reads clearly:
+    /// <b>brown = a log you ride</b>, <b>red = a hazard you dodge</b>. Real art replaces
+    /// this with proper voxel models.
     /// </summary>
     public sealed class MovingObstacle : MonoBehaviour
     {
@@ -16,6 +20,13 @@ namespace CrossHop.Gameplay
         /// <summary>True for logs — the player rides these instead of dying.</summary>
         public bool IsRideable { get; private set; }
 
+        private Renderer _renderer;
+        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        private static Material _hazardMat;  // red — dodge
+        private static Material _logMat;     // brown — ride
+
+        private void Awake() => _renderer = GetComponent<Renderer>();
+
         public void Launch(float speed, float despawnX, bool rideable,
                            System.Action<MovingObstacle> onExit)
         {
@@ -23,6 +34,10 @@ namespace CrossHop.Gameplay
             _despawnX = despawnX;
             IsRideable = rideable;
             _onExit = onExit;
+
+            // Colour by role: logs are safe to ride, everything else is deadly.
+            if (_renderer != null)
+                _renderer.sharedMaterial = rideable ? LogMat() : HazardMat();
         }
 
         private void Update()
@@ -34,6 +49,18 @@ namespace CrossHop.Gameplay
             bool movingRight = _speed > 0f;
             if ((movingRight && p.x >= _despawnX) || (!movingRight && p.x <= _despawnX))
                 _onExit?.Invoke(this);
+        }
+
+        private static Material HazardMat() => _hazardMat ??= Make(new Color(0.86f, 0.24f, 0.22f));
+        private static Material LogMat() => _logMat ??= Make(new Color(0.55f, 0.40f, 0.24f));
+
+        private static Material Make(Color c)
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            if (shader == null) return null;
+            var mat = new Material(shader) { color = c };
+            mat.SetColor(BaseColorId, c);
+            return mat;
         }
     }
 }

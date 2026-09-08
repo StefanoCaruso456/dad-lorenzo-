@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b71f094a8baf47d494e9c4a2876c284, type: 3}
+  m_Name: World_TarPitJungle
+  m_EditorClassIdentifier: CrossHop.Runtime::CrossHop.Gameplay.WorldTheme
+  id: tarpit
+  displayName: Tar-Pit Jungle
+  safeLane: {fileID: 11400000, guid: 8afde0788890b443b96bc792c6d489b3, type: 2}
+  hazardLanes:
+  - {fileID: 11400000, guid: c704848fb24e047888f940d5c97aff54, type: 2}
+  - {fileID: 11400000, guid: 001210131834a4ca5aa0f1bbda691a3c, type: 2}
+  - {fileID: 11400000, guid: c1a095a51ba2442a3bef0fc894570b90, type: 2}
+  difficulty: {fileID: 11400000, guid: 5cb0a3991685d4e5bb5311be3343677e, type: 2}
+  groundMaterial: {fileID: 0}
+  skyboxMaterial: {fileID: 0}
+  music: {fileID: 0}
+  uiTint: {r: 0.48235294, g: 0.7176471, b: 0.2901961, a: 1}
+  signatureHazardPrefab: {fileID: 0}

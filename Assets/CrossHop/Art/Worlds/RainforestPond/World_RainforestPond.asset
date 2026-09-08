@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b71f094a8baf47d494e9c4a2876c284, type: 3}
+  m_Name: World_RainforestPond
+  m_EditorClassIdentifier: CrossHop.Runtime::CrossHop.Gameplay.WorldTheme
+  id: rainforest
+  displayName: Rainforest Pond
+  safeLane: {fileID: 11400000, guid: fc499b304c9a54239b4fdad770c50939, type: 2}
+  hazardLanes:
+  - {fileID: 11400000, guid: 3fb9a757a609a430ea366265ed8da7b4, type: 2}
+  - {fileID: 11400000, guid: bbd2d2ad39b494024a06f9e116069b28, type: 2}
+  - {fileID: 11400000, guid: ab672776428514398af7398e3f8a7e95, type: 2}
+  difficulty: {fileID: 11400000, guid: 5cb0a3991685d4e5bb5311be3343677e, type: 2}
+  groundMaterial: {fileID: 0}
+  skyboxMaterial: {fileID: 0}
+  music: {fileID: 0}
+  uiTint: {r: 0.48235294, g: 0.7607843, b: 0.24705882, a: 1}
+  signatureHazardPrefab: {fileID: 0}

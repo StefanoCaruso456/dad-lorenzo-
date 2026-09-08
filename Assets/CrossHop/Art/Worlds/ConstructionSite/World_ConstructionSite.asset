@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b71f094a8baf47d494e9c4a2876c284, type: 3}
+  m_Name: World_ConstructionSite
+  m_EditorClassIdentifier: CrossHop.Runtime::CrossHop.Gameplay.WorldTheme
+  id: construction
+  displayName: Construction Site
+  safeLane: {fileID: 11400000, guid: 9e31c3288e3444a099e92f3c9836da8a, type: 2}
+  hazardLanes:
+  - {fileID: 11400000, guid: dea1411e9f3734a6fb365680c19db1a0, type: 2}
+  - {fileID: 11400000, guid: da60a099d24c64bf29cec7d7962ace73, type: 2}
+  - {fileID: 11400000, guid: 6ce4ca6640d9e43caa922dfc3e75c0d1, type: 2}
+  difficulty: {fileID: 11400000, guid: 5cb0a3991685d4e5bb5311be3343677e, type: 2}
+  groundMaterial: {fileID: 0}
+  skyboxMaterial: {fileID: 0}
+  music: {fileID: 0}
+  uiTint: {r: 0.8784314, g: 0.5254902, b: 0.23529412, a: 1}
+  signatureHazardPrefab: {fileID: 0}

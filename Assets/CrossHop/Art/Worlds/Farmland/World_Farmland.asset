@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b71f094a8baf47d494e9c4a2876c284, type: 3}
+  m_Name: World_Farmland
+  m_EditorClassIdentifier: CrossHop.Runtime::CrossHop.Gameplay.WorldTheme
+  id: farmland
+  displayName: Farmland Road
+  safeLane: {fileID: 11400000, guid: 87b44e15b841a4717b9dad3d6ba2370b, type: 2}
+  hazardLanes:
+  - {fileID: 11400000, guid: f9ecc4a64e3dc4330b22467b9bf1a37e, type: 2}
+  - {fileID: 11400000, guid: f56cd0915eff949049edda28b96ce20b, type: 2}
+  - {fileID: 11400000, guid: 7bf53be57fbdc48748f7e900b3e72d4b, type: 2}
+  difficulty: {fileID: 11400000, guid: 5cb0a3991685d4e5bb5311be3343677e, type: 2}
+  groundMaterial: {fileID: 0}
+  skyboxMaterial: {fileID: 0}
+  music: {fileID: 0}
+  uiTint: {r: 0.8509804, g: 0.3254902, b: 0.2901961, a: 1}
+  signatureHazardPrefab: {fileID: 0}

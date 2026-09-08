@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b71f094a8baf47d494e9c4a2876c284, type: 3}
+  m_Name: World_NeonGrid
+  m_EditorClassIdentifier: CrossHop.Runtime::CrossHop.Gameplay.WorldTheme
+  id: neongrid
+  displayName: Neon Grid
+  safeLane: {fileID: 11400000, guid: 5952ecfe4c8eb44c5a238d47bd531f66, type: 2}
+  hazardLanes:
+  - {fileID: 11400000, guid: fefd08555cd644f23bcaf3b63426fc03, type: 2}
+  - {fileID: 11400000, guid: 1da036cd26a3d41a281d601b671ff599, type: 2}
+  - {fileID: 11400000, guid: e34763f35d63d410295c4b52a36c1100, type: 2}
+  difficulty: {fileID: 11400000, guid: 5cb0a3991685d4e5bb5311be3343677e, type: 2}
+  groundMaterial: {fileID: 0}
+  skyboxMaterial: {fileID: 0}
+  music: {fileID: 0}
+  uiTint: {r: 1, g: 0.30980393, b: 0.84705883, a: 1}
+  signatureHazardPrefab: {fileID: 0}

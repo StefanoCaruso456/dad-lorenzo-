@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b71f094a8baf47d494e9c4a2876c284, type: 3}
+  m_Name: World_TheMoon
+  m_EditorClassIdentifier: CrossHop.Runtime::CrossHop.Gameplay.WorldTheme
+  id: moon
+  displayName: The Moon
+  safeLane: {fileID: 11400000, guid: 6681519e9e27f46d0b567d403d73056c, type: 2}
+  hazardLanes:
+  - {fileID: 11400000, guid: 6a3f3e2f8f5e9480ba43958bba344562, type: 2}
+  - {fileID: 11400000, guid: f9fa2dc5eca6544ca8cee954f4517749, type: 2}
+  - {fileID: 11400000, guid: d91e922b9426c4f12b86e97b5b042fab, type: 2}
+  difficulty: {fileID: 11400000, guid: 5cb0a3991685d4e5bb5311be3343677e, type: 2}
+  groundMaterial: {fileID: 0}
+  skyboxMaterial: {fileID: 0}
+  music: {fileID: 0}
+  uiTint: {r: 0.60784316, g: 0.54901963, b: 1, a: 1}
+  signatureHazardPrefab: {fileID: 0}
