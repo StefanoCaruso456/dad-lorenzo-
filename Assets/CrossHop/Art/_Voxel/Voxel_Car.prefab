@@ -66,7 +66,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 5d83001d51f6e44d1ae4c8df2333aae8, type: 2}
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -156,7 +156,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: ab2895de9b7764deda98fb16eead749c, type: 2}
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -246,7 +246,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: ab2895de9b7764deda98fb16eead749c, type: 2}
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -336,7 +336,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: ab2895de9b7764deda98fb16eead749c, type: 2}
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -371,6 +371,8 @@ GameObject:
   - component: {fileID: 3129930329037825897}
   - component: {fileID: 6303221246951541712}
   - component: {fileID: 6015836781204963460}
+  - component: {fileID: 6920700451535004379}
+  - component: {fileID: 3757594247744460366}
   m_Layer: 0
   m_Name: Voxel_Car
   m_TagString: Untagged
@@ -437,6 +439,39 @@ MonoBehaviour:
   - {r: 0.91, g: 0.53, b: 0.24, a: 1}
   - {r: 0.61, g: 0.42, b: 0.85, a: 1}
   - {r: 0.2, g: 0.69, b: 0.65, a: 1}
+--- !u!114 &6920700451535004379
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3120096939463404854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d96fae134344d413a9b7ba29bc51413d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CrossHop.Runtime::CrossHop.Gameplay.VoxelTint
+  targets:
+  - {fileID: 5190231329746629886}
+  color: {r: 0.55, g: 0.8, b: 0.95, a: 1}
+--- !u!114 &3757594247744460366
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3120096939463404854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d96fae134344d413a9b7ba29bc51413d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CrossHop.Runtime::CrossHop.Gameplay.VoxelTint
+  targets:
+  - {fileID: 7817451630399293504}
+  - {fileID: 3874014366056850573}
+  - {fileID: 4703068919424153652}
+  - {fileID: 6974334999249700605}
+  color: {r: 0.12, g: 0.12, b: 0.14, a: 1}
 --- !u!1 &8445137517348111448
 GameObject:
   m_ObjectHideFlags: 0
@@ -503,7 +538,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: eb38d6506f6c445c6b77ae10fd89a6cc, type: 2}
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -593,7 +628,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 5d83001d51f6e44d1ae4c8df2333aae8, type: 2}
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -683,7 +718,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: ab2895de9b7764deda98fb16eead749c, type: 2}
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

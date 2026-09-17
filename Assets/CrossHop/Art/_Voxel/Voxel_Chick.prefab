@@ -66,7 +66,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 696cbb4d949914a05b11a07211772060, type: 2}
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -99,6 +99,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5376163650800761811}
+  - component: {fileID: 3634254503647907489}
+  - component: {fileID: 2659768445469954250}
+  - component: {fileID: 7536929085952933798}
+  - component: {fileID: 3324898720603450635}
   m_Layer: 0
   m_Name: Voxel_Chick
   m_TagString: Untagged
@@ -129,6 +133,70 @@ Transform:
   - {fileID: 2406076667587980420}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3634254503647907489
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3399001364980104795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d96fae134344d413a9b7ba29bc51413d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CrossHop.Runtime::CrossHop.Gameplay.VoxelTint
+  targets:
+  - {fileID: 5160103689451388440}
+  - {fileID: 1590600328742253257}
+  color: {r: 1, g: 0.83, b: 0.25, a: 1}
+--- !u!114 &2659768445469954250
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3399001364980104795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d96fae134344d413a9b7ba29bc51413d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CrossHop.Runtime::CrossHop.Gameplay.VoxelTint
+  targets:
+  - {fileID: 2722000478697943512}
+  color: {r: 0.86, g: 0.24, b: 0.22, a: 1}
+--- !u!114 &7536929085952933798
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3399001364980104795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d96fae134344d413a9b7ba29bc51413d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CrossHop.Runtime::CrossHop.Gameplay.VoxelTint
+  targets:
+  - {fileID: 5256985307453738395}
+  - {fileID: 1997001077585257017}
+  - {fileID: 2943166054712306621}
+  color: {r: 0.95, g: 0.55, b: 0.12, a: 1}
+--- !u!114 &3324898720603450635
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3399001364980104795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d96fae134344d413a9b7ba29bc51413d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CrossHop.Runtime::CrossHop.Gameplay.VoxelTint
+  targets:
+  - {fileID: 3084547188652832480}
+  - {fileID: 5616909981150068560}
+  color: {r: 0.08, g: 0.08, b: 0.08, a: 1}
 --- !u!1 &3815538590516319386
 GameObject:
   m_ObjectHideFlags: 0
@@ -195,7 +263,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: b58252ff29da242388095c0c617f0b02, type: 2}
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -285,7 +353,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: f08d89d1127fa43efbe4291e676b4370, type: 2}
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -375,7 +443,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: b58252ff29da242388095c0c617f0b02, type: 2}
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -465,7 +533,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: f08d89d1127fa43efbe4291e676b4370, type: 2}
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -555,7 +623,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0f6eec6364b9a4645b5b22613440d5e7, type: 2}
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -645,7 +713,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 696cbb4d949914a05b11a07211772060, type: 2}
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -735,7 +803,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 696cbb4d949914a05b11a07211772060, type: 2}
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

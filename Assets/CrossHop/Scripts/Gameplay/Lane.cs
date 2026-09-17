@@ -27,6 +27,7 @@ namespace CrossHop.Gameplay
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
         private MaterialPropertyBlock _mpb;
+        private Transform _roadLines;
 
         public LaneType Type => _def != null ? _def.type : LaneType.Safe;
         public int Row => _row;
@@ -46,6 +47,7 @@ namespace CrossHop.Gameplay
             _spawnTimer = Random.Range(0f, spawnInterval);
 
             StyleBody();
+            EnsureRoadLines(Type == LaneType.Road);
         }
 
         private void StyleBody()
@@ -71,8 +73,59 @@ namespace CrossHop.Gameplay
             bodyRenderer.SetPropertyBlock(_mpb);
         }
 
+        private void AnimateWater()
+        {
+            if (bodyRenderer == null) return;
+            // Gentle shimmer, phase-shifted per row, so water reads as moving.
+            float t = Mathf.Sin(Time.time * 1.6f + _row * 0.6f) * 0.5f + 0.5f;
+            Color c = Color.Lerp(new Color(0.20f, 0.50f, 0.78f), new Color(0.32f, 0.66f, 0.92f), t);
+            _mpb ??= new MaterialPropertyBlock();
+            bodyRenderer.GetPropertyBlock(_mpb);
+            _mpb.SetColor(BaseColorId, c);
+            _mpb.SetColor(ColorId, c);
+            bodyRenderer.SetPropertyBlock(_mpb);
+        }
+
+        private void EnsureRoadLines(bool active)
+        {
+            if (active && _roadLines == null) BuildRoadLines();
+            if (_roadLines != null) _roadLines.gameObject.SetActive(active);
+        }
+
+        private void BuildRoadLines()
+        {
+            if (bodyRenderer == null) return;
+            _roadLines = new GameObject("RoadLines").transform;
+            _roadLines.SetParent(transform, false);
+
+            float w = _grid.laneWidth * _grid.cellSize;
+            float bodyY = bodyRenderer.transform.localScale.y;
+            float c = _grid.cellSize;
+            var yellow = new Color(0.95f, 0.85f, 0.22f);
+            var mpb = new MaterialPropertyBlock();
+
+            // Dashed centre line running along the road, counter-scaled against the stretched body.
+            for (int col = _grid.MinColumn; col <= _grid.MaxColumn; col++)
+            {
+                var dash = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                dash.name = "Dash";
+                var collider = dash.GetComponent<Collider>();
+                if (collider != null) Destroy(collider);
+                dash.transform.SetParent(_roadLines, false);
+                dash.transform.localScale = new Vector3(0.5f / w, 0.06f / bodyY, 0.14f / c);
+                dash.transform.localPosition = new Vector3(col * c / w, 0.07f / bodyY, 0f);
+                var r = dash.GetComponent<Renderer>();
+                r.GetPropertyBlock(mpb);
+                mpb.SetColor(BaseColorId, yellow);
+                mpb.SetColor(ColorId, yellow);
+                r.SetPropertyBlock(mpb);
+            }
+        }
+
         private void Update()
         {
+            if (Type == LaneType.Water) AnimateWater();
+
             if (_def == null || _def.obstaclePrefab == null || _obstaclePool == null)
                 return;
 

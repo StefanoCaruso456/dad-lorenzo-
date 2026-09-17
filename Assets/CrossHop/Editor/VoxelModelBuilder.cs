@@ -101,6 +101,7 @@ namespace CrossHop.EditorTools
             AddRandomColor(root, R(chassis, cabin), CarPalette);
             AddTint(root, R(window), new Color(0.55f, 0.8f, 0.95f));
             AddTint(root, R(wFL, wFR, wBL, wBR), new Color(0.12f, 0.12f, 0.14f));
+            root.AddComponent<RandomVoxelScale>(); // vary length/height per spawn
             return SaveAndDestroy(root, $"{Dir}/Voxel_Car.prefab");
         }
 
@@ -112,9 +113,14 @@ namespace CrossHop.EditorTools
             GameObject trunk = Cube(root, "Trunk", new(0f, 0.16f, 0f), new(2.0f, 0.34f, 0.7f));
             GameObject ringL = Cube(root, "RingL", new(-1.0f, 0.16f, 0f), new(0.08f, 0.36f, 0.72f));
             GameObject ringR = Cube(root, "RingR", new(1.0f, 0.16f, 0f), new(0.08f, 0.36f, 0.72f));
+            // Wood-grain planks along the top so the log doesn't read as a plain block.
+            GameObject grain1 = Cube(root, "Grain1", new(0f, 0.335f, 0.16f), new(1.9f, 0.05f, 0.08f));
+            GameObject grain2 = Cube(root, "Grain2", new(0f, 0.335f, -0.02f), new(1.9f, 0.05f, 0.06f));
+            GameObject grain3 = Cube(root, "Grain3", new(0f, 0.335f, -0.18f), new(1.9f, 0.05f, 0.08f));
 
             AddRandomColor(root, R(trunk), LogPalette);
             AddTint(root, R(ringL, ringR), new Color(0.68f, 0.52f, 0.34f));
+            AddTint(root, R(grain1, grain2, grain3), new Color(0.28f, 0.19f, 0.11f));
             return SaveAndDestroy(root, $"{Dir}/Voxel_Log.prefab");
         }
 
