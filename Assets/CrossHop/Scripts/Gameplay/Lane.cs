@@ -21,8 +21,11 @@ namespace CrossHop.Gameplay
         private float _speed;            // signed cells/sec
         private float _spawnInterval;
         private float _spawnTimer;
-        private ObjectPool _obstaclePool;
-        private readonly List<MovingObstacle> _active = new();
+        private LaneGenerator _generator;
+        private GameObject[] _variants;
+        private readonly List<Active> _active = new();
+
+        private struct Active { public MovingObstacle Obstacle; public ObjectPool Pool; }
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
@@ -34,20 +37,28 @@ namespace CrossHop.Gameplay
 
         /// <summary>Configure a freshly-pooled lane for a specific row and difficulty.</summary>
         public void Init(GridSettings grid, LaneDefinition def, int row,
-                         float speed, float spawnInterval, ObjectPool obstaclePool)
+                         float speed, float spawnInterval, LaneGenerator generator)
         {
             _grid = grid;
             _def = def;
             _row = row;
             _speed = speed;
             _spawnInterval = spawnInterval;
-            _obstaclePool = obstaclePool;
+            _generator = generator;
+            _variants = ResolveVariants(def);
 
             // Stagger the first spawn so lanes don't pulse in lockstep.
             _spawnTimer = Random.Range(0f, spawnInterval);
 
             StyleBody();
             EnsureRoadLines(Type == LaneType.Road);
+        }
+
+        private static GameObject[] ResolveVariants(LaneDefinition def)
+        {
+            if (def.obstacleVariants != null && def.obstacleVariants.Length > 0) return def.obstacleVariants;
+            if (def.obstaclePrefab != null) return new[] { def.obstaclePrefab };
+            return System.Array.Empty<GameObject>();
         }
 
         private void StyleBody()
@@ -126,7 +137,7 @@ namespace CrossHop.Gameplay
         {
             if (Type == LaneType.Water) AnimateWater();
 
-            if (_def == null || _def.obstaclePrefab == null || _obstaclePool == null)
+            if (_variants == null || _variants.Length == 0 || _generator == null)
                 return;
 
             _spawnTimer -= Time.deltaTime;
@@ -139,37 +150,42 @@ namespace CrossHop.Gameplay
 
         private void SpawnObstacle()
         {
+            GameObject prefab = _variants[Random.Range(0, _variants.Length)];
+            ObjectPool pool = _generator.ObstaclePoolFor(prefab);
+            if (pool == null) return;
+
             float half = (_grid.laneWidth / 2f + 2f) * _grid.cellSize;
             bool movingRight = _speed > 0f;
             float startX = movingRight ? -half : half;
             float despawnX = movingRight ? half : -half;
 
             var pos = new Vector3(startX, 0f, _row * _grid.cellSize);
-            GameObject go = _obstaclePool.Get(pos, Quaternion.identity);
+            GameObject go = pool.Get(pos, Quaternion.identity);
 
             var obstacle = go.GetComponent<MovingObstacle>();
             if (obstacle == null)
             {
                 Debug.LogError("[Lane] Obstacle prefab missing MovingObstacle component.", go);
-                _obstaclePool.Release(go);
+                pool.Release(go);
                 return;
             }
 
-            obstacle.Launch(_speed, despawnX, _def.RequiresRiding, Recycle);
-            _active.Add(obstacle);
+            obstacle.Launch(_speed, despawnX, _def.RequiresRiding, o => Recycle(o, pool));
+            _active.Add(new Active { Obstacle = obstacle, Pool = pool });
         }
 
-        private void Recycle(MovingObstacle obstacle)
+        private void Recycle(MovingObstacle obstacle, ObjectPool pool)
         {
-            _active.Remove(obstacle);
-            _obstaclePool.Release(obstacle.gameObject);
+            for (int i = _active.Count - 1; i >= 0; i--)
+                if (_active[i].Obstacle == obstacle) { _active.RemoveAt(i); break; }
+            pool.Release(obstacle.gameObject);
         }
 
-        /// <summary>Return all obstacles to the pool. Called before the lane itself is recycled.</summary>
+        /// <summary>Return all obstacles to their pools. Called before the lane itself is recycled.</summary>
         public void ClearObstacles()
         {
             for (int i = _active.Count - 1; i >= 0; i--)
-                _obstaclePool.Release(_active[i].gameObject);
+                _active[i].Pool.Release(_active[i].Obstacle.gameObject);
             _active.Clear();
         }
 
@@ -180,8 +196,9 @@ namespace CrossHop.Gameplay
         public MovingObstacle ObstacleAtColumn(int column)
         {
             float x = column * _grid.cellSize;
-            foreach (MovingObstacle o in _active)
+            foreach (Active a in _active)
             {
+                MovingObstacle o = a.Obstacle;
                 // Span-aware: an obstacle covers half its length either side of its centre.
                 float half = o.LengthCells * 0.5f * _grid.cellSize;
                 if (Mathf.Abs(o.transform.position.x - x) <= half + _grid.cellSize * 0.1f)

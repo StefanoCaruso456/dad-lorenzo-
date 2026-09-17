@@ -20,6 +20,10 @@ namespace CrossHop.Gameplay
         [Tooltip("Obstacle/log prefab that moves along the lane. Null for Safe lanes.")]
         public GameObject obstaclePrefab;
 
+        [Tooltip("Multiple obstacle prefabs to spawn a random mix (e.g. cars/SUVs/pickups/trucks). " +
+                 "If set, this takes precedence over the single obstaclePrefab.")]
+        public GameObject[] obstacleVariants;
+
         [Tooltip("Obstacle travel speed in cells/second.")]
         [Min(0f)] public float minSpeed = 2f;
         [Min(0f)] public float maxSpeed = 4f;

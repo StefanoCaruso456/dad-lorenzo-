@@ -28,7 +28,7 @@ namespace CrossHop.Gameplay
         [SerializeField] private int rowsBehind = 6;
 
         private readonly Dictionary<int, Lane> _lanes = new();
-        private readonly Dictionary<LaneDefinition, ObjectPool> _obstaclePools = new();
+        private readonly Dictionary<GameObject, ObjectPool> _obstaclePools = new();
         private ObjectPool _lanePool;
         private Transform _obstacleRoot;
         private WorldTheme _world;
@@ -102,17 +102,21 @@ namespace CrossHop.Gameplay
 
         // ---- Internals ----------------------------------------------------
 
-        private ObjectPool EnsureObstaclePool(LaneDefinition def)
+        /// <summary>Pool for a specific obstacle prefab, created on first use. Shared across lanes.</summary>
+        public ObjectPool ObstaclePoolFor(GameObject prefab)
         {
-            if (def == null || def.obstaclePrefab == null) return null;
-            if (_obstaclePools.TryGetValue(def, out ObjectPool pool)) return pool;
+            if (prefab == null) return null;
+            if (_obstaclePools.TryGetValue(prefab, out ObjectPool pool)) return pool;
 
-            var root = new GameObject($"Pool_{def.name}").transform;
+            var root = new GameObject($"Pool_{prefab.name}").transform;
             root.SetParent(_obstacleRoot, false);
-            pool = new ObjectPool(def.obstaclePrefab, root, prewarm: 8);
-            _obstaclePools[def] = pool;
+            pool = new ObjectPool(prefab, root, prewarm: 8);
+            _obstaclePools[prefab] = pool;
             return pool;
         }
+
+        private static bool HasObstacles(LaneDefinition def)
+            => (def.obstacleVariants != null && def.obstacleVariants.Length > 0) || def.obstaclePrefab != null;
 
         private void BuildLane(int row, bool forceSafe)
         {
@@ -129,9 +133,8 @@ namespace CrossHop.Gameplay
             var lane = go.GetComponent<Lane>();
             float speed = ResolveSpeed(def, row);
             float interval = ResolveSpawnInterval(def, row);
-            ObjectPool obstaclePool = EnsureObstaclePool(def);
 
-            lane.Init(grid, def, row, speed, interval, obstaclePool);
+            lane.Init(grid, def, row, speed, interval, this);
 
             _lanes[row] = lane;
             if (row > _highestRowBuilt) _highestRowBuilt = row;
@@ -151,7 +154,7 @@ namespace CrossHop.Gameplay
 
         private float ResolveSpeed(LaneDefinition def, int row)
         {
-            if (def.obstaclePrefab == null) return 0f;
+            if (!HasObstacles(def)) return 0f;
             float mult = _world.difficulty != null ? _world.difficulty.SpeedMultiplier(row) : 1f;
             float baseSpeed = UnityEngine.Random.Range(def.minSpeed, def.maxSpeed) * mult;
             // Alternate travel direction by row parity for readable, varied traffic.
